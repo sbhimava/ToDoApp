@@ -15,7 +15,7 @@ Completed user stories:
   * [x] Suggested: Used custom adapters to display todo items in list view
   * [x] Suggested: Used DialogFragment for editing items
   * [x] Optional: Added support for priority
-  * [] TODO: Improve UI
+  * TODO: Improve UI
 
 A walkthrough of the app:
 
