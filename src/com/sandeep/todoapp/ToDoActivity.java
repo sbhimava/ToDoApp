@@ -1,56 +1,64 @@
 package com.sandeep.todoapp;
 
-import java.io.File;
-import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 
-import org.apache.commons.io.FileUtils;
+import com.sandeep.todoapp.EditItemDialog.EditItemDialogListener;
 
-import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+public class ToDoActivity extends FragmentActivity implements EditItemDialogListener {
 
-public class ToDoActivity extends Activity {
-
-	private ArrayList<String> todoItems;
-	private ArrayAdapter<String> todoAdapter;
+	private ToDoDao todoDao;
+	private ArrayList<ToDoItem> todoItems;
+	private ToDoItemsAdapter todoAdapter;
 	private ListView lvItems;
 	private EditText etAddItem;
-	private int REQUEST_EDIT = 1;
+	private int selectedPosition;
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_todo);
-        etAddItem = (EditText) findViewById(R.id.etAddItem);
+        
+        todoDao = new ToDoDao(this);
+        todoDao.open();
         readItems();
-        todoAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, todoItems);
+        todoAdapter = new ToDoItemsAdapter(this, todoItems);
         lvItems = (ListView) findViewById(R.id.lvItems);
         setupListViewListeners();
         lvItems.setAdapter(todoAdapter);
+        
+        etAddItem = (EditText) findViewById(R.id.etAddItem);
     }
     
     public void addTodoItem(View v) {
-    	String item = etAddItem.getText().toString().trim();
+    	String name = etAddItem.getText().toString().trim();
     	etAddItem.setText("");
     	String toastMessage;
-    	if (item.equals("")) {
+    	if (name.equals("")) {
     		toastMessage = getResources().getString(R.string.empty_item_toast_message);
     	} else {
-	    	todoAdapter.add(item);
-	    	writeItems();
-	    	toastMessage = getResources().getString(R.string.add_toast_message) + " '" + item + "'";
+			try {
+				ToDoItem item = todoDao.createItem(name, null, ToDoDao.PRIORITY_NORMAL, 
+						null, null, ToDoDao.REPEAT_NONE, ToDoDao.COMPLETED_FALSE);
+				todoAdapter.add(item);
+				toastMessage = getResources().getString(R.string.add_toast_message) + " '" + name + "'";
+			} catch (ParseException e) {
+				toastMessage = getResources().getString(R.string.empty_item_toast_message);
+			}
     	}
     	Toast.makeText(this, toastMessage, Toast.LENGTH_SHORT).show();
     }
@@ -60,54 +68,36 @@ public class ToDoActivity extends Activity {
     	lvItems.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				Intent i = new Intent(ToDoActivity.this, EditItemActivity.class);
-				i.putExtra("position", position);
-				i.putExtra("text", todoItems.get(position));
-				startActivityForResult(i, REQUEST_EDIT);
+				ToDoItem item = todoItems.get(position);
+				selectedPosition = position;
+				showEditDialog(item.getId(), item.getName(), item.getDueDate(), item.getPriority());
 			}
 		});
     	
     	lvItems.setOnItemLongClickListener(new OnItemLongClickListener() {
 			@Override
 			public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+				ToDoItem item = todoItems.get(position);
+				todoDao.deleteItem(item);
 				todoItems.remove(position);
 				todoAdapter.notifyDataSetChanged();
-				writeItems();
 				return true;
 			}
-    		
 		});
     }
     
     private void readItems() {
-    	File filesDir = getFilesDir();
-    	File todoFile = new File(filesDir, "todo.txt");
     	try {
-    		todoItems = new ArrayList<String>(FileUtils.readLines(todoFile));
-    	} catch(IOException e) {
-    		todoItems = new ArrayList<String>();
+    		todoItems = todoDao.getAllItems();
+    	} catch(ParseException e) {
+    		todoItems = new ArrayList<ToDoItem>();
     	}
     }
     
-    private void writeItems() {
-    	File filesDir = getFilesDir();
-    	File todoFile = new File(filesDir, "todo.txt");
-    	try {
-    		FileUtils.writeLines(todoFile, todoItems);
-    	} catch(IOException e) {
-    		e.printStackTrace();
-    	}
-	}
-    
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    	if (requestCode == REQUEST_EDIT && resultCode == RESULT_OK) {
-    		int position = data.getIntExtra("position", -1);
-    		String editedItem = data.getStringExtra("itemText");
-    		todoItems.set(position, editedItem);
-    		todoAdapter.notifyDataSetChanged();
-    		writeItems();
-    	}
+    private void showEditDialog(long id, String name, Date date, int priority) {
+        FragmentManager fm = getSupportFragmentManager();
+        EditItemDialog editDialog = EditItemDialog.newInstance(id, name, date, priority);
+        editDialog.show(fm, "fragment_edit_item");
     }
     
 	@Override
@@ -128,4 +118,21 @@ public class ToDoActivity extends Activity {
         }
         return super.onOptionsItemSelected(item);
     }
+
+	@Override
+	public void onFinishEditDialog(long id, String name, Date dueDate, int priority) {
+		try {
+			int result = todoDao.updateItem(id, name, null, priority, dueDate, null, ToDoDao.REPEAT_NONE, ToDoDao.COMPLETED_FALSE);
+			if (result == 1) {
+				ToDoItem item = todoItems.get(selectedPosition);
+				item.setName(name);
+				item.setDueDate(dueDate);
+				item.setPriority(priority);
+				todoAdapter.notifyDataSetChanged();
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }

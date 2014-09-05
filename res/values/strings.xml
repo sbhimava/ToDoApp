@@ -10,5 +10,14 @@
     <string name="save_button_label">Save</string>
     <string name="add_toast_message">Added new item</string>
     <string name="empty_item_toast_message">ToDo Item cannot be empty</string>
-
+    <string name="item_description_placeholder">Description</string>
+    <string name="item_name_placeholder">Name</string>
+    <string name="item_priority_placeholder">Priority</string>
+    <string name="item_label_name">Name</string>
+    <string name="item_duedate_placeholder">No due date set</string>
+    <string name="item_label_duedate">Due Date</string>
+    <string name="item_label_none">Not set</string>
+    <string name="item_label_save">Save</string>
+    <string name="item_edit_title">Edit Item</string>
+	
 </resources>
