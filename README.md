@@ -10,6 +10,12 @@ Completed user stories:
   * [x] Required: Create a todo item
   * [x] Required: Delete a todo item
   * [x] Required: Edit a todo item
+  * [x] Suggested: Added SQLite storage for persistance
+  * [x] Suggested: Added support for due dates
+  * [x] Suggested: Used custom adapters to display todo items in list view
+  * [x] Suggested: Used DialogFragment for editing items
+  * [x] Optional: Added support for priority
+  * [] TODO: Improve UI
 
 A walkthrough of the app:
 
