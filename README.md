@@ -22,6 +22,6 @@ TODO user stories:
 
 A walkthrough of the app:
 
-![Video Walkthrough](https://raw.githubusercontent.com/sbhimava/ToDoApp/master/ToDo.gif)
+![Video Walkthrough](https://raw.githubusercontent.com/sbhimava/ToDoApp/7dd6689c6fc6ad048c7cbe3c26aae3ec145fb62c/ToDo.gif)
 
 GIF created with [LiceCap](http://www.cockos.com/licecap/).
